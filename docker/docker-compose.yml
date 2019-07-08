@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  ### WEB ###################################################
+  web:
+    image: nginx:latest
+    volumes:
+    - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}:cached
+    - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+    - ${APP_WEB_PORT}:80
+    links:
+    - php
+    - composer
+  ### PHP ###################################################
+  php:
+    build: ./php
+    volumes:
+    - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}:cached
+    links:
+    - mysql
+  ### MYSQL ###################################################
+  mysql:
+    image: mysql:latest
+    restart: always
+    environment:
+    - MYSQL_ROOT_PASSWORD=${DB_MYSQL_PASSWORD}
+    - MYSQL_DATABASE=${COMPOSE_PROJECT_NAME}
+    - MYSQL_USER=${DB_MYSQL_USER}
+    - MYSQL_PASSWORD=${DB_MYSQL_PASSWORD}
+    - MYSQL_ROOT_HOST=%
+    volumes:
+    - ${DB_MYSQL_PATH_HOST}:/var/lib/mysql:cached
+    ports:
+    - ${DB_MYSQL_PORT}:3306
+    command:
+      --default-authentication-plugin=mysql_native_password
+  ### phpmyadmin ###################################################
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links:
+    - mysql:mysql
+    ports:
+    - 9088:80
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_ROOT_PASSWORD: root
+      PMA_HOST: mysql
+  ### COMPOSER ###################################################
+  composer:
+    image: composer:latest
+    restart: always
+    volumes:
+    - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}:cached
+    working_dir: ${APP_PATH_CONTAINER}
+    command: tail -F .env
