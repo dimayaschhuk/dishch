@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-docker-compose -p syngenta down
+docker-compose -p dishch down
 sudo rm -rf databases/
 mkdir -p databases
+cp -n ../.env.example ../.env
 cp -n .env.example .env
 docker-compose -p dishch up -d
 docker exec -ti dishch_composer_1 sh -c "composer update"
